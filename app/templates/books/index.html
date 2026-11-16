@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Book Catalogue{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Library Book Catalogue</h2>
+  {% if current_user.is_staff %}
+    <a href="{{ url_for('books.create') }}" class="btn btn-primary">+ Add New Book</a>
+  {% endif %}
+</div>
+
+<form method="GET" class="row g-2 mb-4">
+  <div class="col-md-10">
+    <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Search by title, author, ISBN, category, or shelf location...">
+  </div>
+  <div class="col-md-2 d-grid">
+    <button type="submit" class="btn btn-dark">Search</button>
+  </div>
+</form>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Author</th>
+          <th>ISBN</th>
+          <th>Publisher (Year)</th>
+          <th>Availability</th>
+          <th>Shelf</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for book in books %}
+        <tr>
+          <td>{{ book.id }}</td>
+          <td><a href="{{ url_for('books.detail', book_id=book.id) }}" class="fw-semibold text-decoration-none">{{ book.title }}</a></td>
+          <td>{{ book.author }}</td>
+          <td><code>{{ book.isbn }}</code></td>
+          <td>{{ book.publisher }} ({{ book.publication_year }})</td>
+          <td>
+            {% if book.available_quantity > 0 %}
+              <span class="badge bg-success">{{ book.available_quantity }} / {{ book.total_quantity }} Available</span>
+            {% else %}
+              <span class="badge bg-danger">0 / {{ book.total_quantity }} Out of Stock</span>
+            {% endif %}
+          </td>
+          <td><span class="badge bg-secondary">{{ book.shelf_location }}</span></td>
+          <td>
+            <a href="{{ url_for('books.detail', book_id=book.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+            {% if current_user.is_staff %}
+              <a href="{{ url_for('books.edit', book_id=book.id) }}" class="btn btn-sm btn-outline-warning">Edit</a>
+            {% endif %}
+            {% if current_user.is_super_admin %}
+              <form action="{{ url_for('books.delete', book_id=book.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this book permanently?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center py-4 text-muted">No books found in the catalogue.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

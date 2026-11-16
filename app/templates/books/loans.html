@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Borrowing History{% endblock %}
+{% block content %}
+<h2 class="mb-3">{{ 'All Library Loans' if current_user.is_staff else 'My Borrowed Books' }}</h2>
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-dark">
+        <tr>
+          <th>Book Title</th>
+          {% if current_user.is_staff %}<th>Student</th>{% endif %}
+          <th>Borrowed Date</th>
+          <th>Due Date</th>
+          <th>Status</th>
+          {% if current_user.is_staff %}<th>Action</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td><a href="{{ url_for('books.detail', book_id=r.book.id) }}">{{ r.book.title }}</a></td>
+          {% if current_user.is_staff %}<td>{{ r.student.name }} ({{ r.student.phone }})</td>{% endif %}
+          <td>{{ r.borrowed_at.strftime('%Y-%m-%d') }}</td>
+          <td>{{ r.due_date.strftime('%Y-%m-%d') }}</td>
+          <td>
+            {% if r.status == 'Returned' %}
+              <span class="badge bg-secondary">Returned</span>
+            {% elif r.status == 'Overdue' %}
+              <span class="badge bg-danger">Overdue</span>
+            {% else %}
+              <span class="badge bg-warning text-dark">Borrowed</span>
+            {% endif %}
+          </td>
+          {% if current_user.is_staff %}
+          <td>
+            {% if not r.returned_at %}
+              <form action="{{ url_for('books.return_book', record_id=r.id) }}" method="POST">
+                <button type="submit" class="btn btn-sm btn-success">Mark Returned</button>
+              </form>
+            {% else %}
+              <small class="text-muted">{{ r.returned_at.strftime('%Y-%m-%d') }}</small>
+            {% endif %}
+          </td>
+          {% endif %}
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="text-center py-4 text-muted">No borrowing records found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

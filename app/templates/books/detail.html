@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}{{ book.title }}{% endblock %}
+{% block content %}
+<a href="{{ url_for('books.index') }}" class="btn btn-outline-secondary btn-sm mb-3">← Back to Catalogue</a>
+
+<div class="row">
+  <div class="col-md-7">
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h3>{{ book.title }}</h3>
+        <p class="text-muted">by {{ book.author }}</p>
+        <hr>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item"><strong>Book ID:</strong> #{{ book.id }}</li>
+          <li class="list-group-item"><strong>ISBN:</strong> {{ book.isbn }}</li>
+          <li class="list-group-item"><strong>Category:</strong> {{ book.category }}</li>
+          <li class="list-group-item"><strong>Publisher:</strong> {{ book.publisher }}</li>
+          <li class="list-group-item"><strong>Publication Year:</strong> {{ book.publication_year }}</li>
+          <li class="list-group-item"><strong>Shelf Location:</strong> <span class="badge bg-secondary">{{ book.shelf_location }}</span></li>
+          <li class="list-group-item"><strong>Stock:</strong> {{ book.available_quantity }} available out of {{ book.total_quantity }} total copies</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  {% if current_user.is_staff %}
+  <div class="col-md-5">
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-primary text-white">Issue Book to Student</div>
+      <div class="card-body">
+        {% if book.available_quantity > 0 %}
+        <form action="{{ url_for('books.issue_book', book_id=book.id) }}" method="POST">
+          <div class="mb-3">
+            <label class="form-label">Select Student</label>
+            <select name="student_id" class="form-select" required>
+              {% for s in students %}
+                <option value="{{ s.id }}">{{ s.name }} ({{ s.email }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Loan Duration (Days)</label>
+            <input type="number" name="days" value="14" min="1" max="60" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-success w-100">Issue Copy</button>
+        </form>
+        {% else %}
+          <p class="text-danger mb-0">All copies of this book are currently borrowed.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if active_loans %}
+    <div class="card shadow-sm">
+      <div class="card-header">Currently Borrowed By</div>
+      <ul class="list-group list-group-flush">
+        {% for loan in active_loans %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>{{ loan.student.name }}</strong><br>
+            <small class="text-muted">Due: {{ loan.due_date.strftime('%Y-%m-%d') }}</small>
+          </div>
+          <form action="{{ url_for('books.return_book', record_id=loan.id) }}" method="POST">
+            <button type="submit" class="btn btn-sm btn-outline-success">Mark Returned</button>
+          </form>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
