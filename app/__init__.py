@@ -41,3 +41,6 @@ def create_app():
         return render_template("base.html", error_code=404, error_message="Page or Book Not Found."), 404
 
     return app
+
+# Expose app instance at module level for gunicorn app:app
+app = create_app()
